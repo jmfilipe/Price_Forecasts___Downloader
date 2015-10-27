@@ -1,0 +1,15 @@
+from setuptools import setup, find_packages
+
+setup(name='MIBEL_Downloader',
+      version='0.21',
+      description='Downloader for MIBEL Market Prices and Load/Wind Forecasts',
+      url='http://github.com/jmfilipe/Price_Forecasts___Downloader',
+      author='Jorge Filipe',
+      author_email='jmfilipe@inesctec.pt',
+      license='MIT',
+      packages=find_packages(),
+      install_requires=[
+          'pandas >=0.16, <= 0.17',
+          'beautifulsoup4 >= 4.4.1, < 5.0',
+          'html5lib'
+      ],)
