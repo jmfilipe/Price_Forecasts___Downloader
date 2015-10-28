@@ -148,7 +148,6 @@ def download_range(download_type, start_date, end_date, timezone_):
         else:
             sys.exit("""ERROR! Download Type: \'%s\' differs from expected values:
                     'day_ahead_price',
-                    'day_ahead_plus_intraday_price',
                     'secondary_reserve',
                     'tertiary_reserve',
                     'wind_forecast',
