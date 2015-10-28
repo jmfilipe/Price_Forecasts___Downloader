@@ -1,5 +1,5 @@
 Downloader for MIBEL Market Prices and Load/Wind Forecasts
-=======
+==========================================================
 
 Simple script to download public information provided by the portuguese and spanish TSOs (REN and REE). 
 This downloader supports:
@@ -24,15 +24,16 @@ Dependencies:
 * html5lib
 
 Documentation
-------------
+-------------
 
 .. code-block:: python
+
     download_range(download_type,start_date,end_date,timezone_)
 
 * download_type:   'day_ahead_price', 'secondary_reserve', 'tertiary_reserve', 'wind_forecast', 'load_forecast'
 * start_date: format Y-m-d
 * end_date: format Y-m-d
-* timezone_: complete list of timezones at: http://stackoverflow.com/questions/13866926/python-pytz-list-of-timezones
+* timezone\_: complete list of timezones at: http://stackoverflow.com/questions/13866926/python-pytz-list-of-timezones
 
 Example
 -------
