@@ -28,7 +28,7 @@ Documentation
 
 .. code-block:: python
 
-    download_range(download_type,start_date,end_date,timezone_)
+    download_range(download_type, start_date, end_date, timezone_, path)
 
 * **download_type**:   'day_ahead_price', 'secondary_reserve', 'tertiary_reserve', 'wind_forecast', 'load_forecast'
 * **start_date**: format Y-m-d
