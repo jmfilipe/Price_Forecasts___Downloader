@@ -1,7 +1,9 @@
 Downloader for MIBEL Market Prices and Load/Wind Forecasts
 ==========================================================
 
-Simple script to download public information provided by the portuguese and spanish TSOs (REN and REE). 
+Simple script to download public information provided by the portuguese and spanish TSOs (REN and REE).
+Exports information as a csv file and/or as a pandas DataFrame. Takes into account daylight savings time.
+
 This downloader supports:
 
 * MIBEL Day-ahead Energy Market Prices [REN.pt]
