@@ -30,10 +30,11 @@ Documentation
 
     download_range(download_type,start_date,end_date,timezone_)
 
-* download_type:   'day_ahead_price', 'secondary_reserve', 'tertiary_reserve', 'wind_forecast', 'load_forecast'
-* start_date: format Y-m-d
-* end_date: format Y-m-d
-* timezone\_: complete list of timezones at: http://stackoverflow.com/questions/13866926/python-pytz-list-of-timezones
+* **download_type**:   'day_ahead_price', 'secondary_reserve', 'tertiary_reserve', 'wind_forecast', 'load_forecast'
+* **start_date**: format Y-m-d
+* **end_date**: format Y-m-d
+* **timezone\_**: complete list of timezones at: http://stackoverflow.com/questions/13866926/python-pytz-list-of-timezones
+* **path**: False(bool) to disable .csv export; empty to use current directory; 'path' to defined specific path
 
 Example
 -------
@@ -49,13 +50,16 @@ Example
     # 'load_forecast'
 
     # single download type
-    mibel.download_range(download_type='day_ahead_price',
+    df = mibel.download_range(download_type='day_ahead_price',
                          start_date='2015-01-01',
                          end_date='2015-05-01',
-                         timezone_='UTC')
+                         timezone_='UTC',
+                         path=False)
+    print(df['day_ahead_price'])
 
     # multiple download types
     mibel.download_range(download_type=['day_ahead_price', 'wind_forecast', 'load_forecast'],
                          start_date='2015-01-01',
                          end_date='2015-05-01',
-                         timezone_='UTC')
+                         timezone_='UTC',
+                         path='c:/output/')

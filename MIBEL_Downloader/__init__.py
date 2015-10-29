@@ -1,14 +1,16 @@
 
 from bs4 import BeautifulSoup
 import pandas as pd
+import numpy as np
 import urllib.request
-import os
 import sys
 from datetime import datetime, timedelta
 from pytz import timezone
 
 
-def download_range(download_type, start_date, end_date, timezone_):
+# todo dividir em funcoes, para nao ficar tudo no __init__
+# todo dar a opcao de retornar dataframe em vez de escrever num csv
+def download_range(download_type, start_date, end_date, timezone_, path=''):
 
     def REE_download(day, forecast_to_export, timezone_):
 
@@ -19,6 +21,7 @@ def download_range(download_type, start_date, end_date, timezone_):
 
         file = urllib.request.urlopen(url)
         data = file.read()
+        # todo verificar se o ficheiro esta vazio, em caso afirmativo tentar o download outra vez e depois registar o erro
 
         soup = BeautifulSoup(data, "html.parser")
 
@@ -128,6 +131,8 @@ def download_range(download_type, start_date, end_date, timezone_):
     if isinstance(download_type, str):
         download_type = [download_type]
 
+    return_df = {}
+
     for type_ in download_type:
 
         print("\n   .:: Downloading %s ::.\n" % type_)
@@ -154,8 +159,11 @@ def download_range(download_type, start_date, end_date, timezone_):
                     'load_forecast'
                     """ % type_)
 
-        os.makedirs('outputFiles\\', exist_ok=True)
-        filename = 'outputFiles\\' + type_ + '.csv'
-        df.to_csv(filename, sep=';', index=False)
+        if path != False:
+            filename = path + type_ + '.csv'
+            df.to_csv(filename, sep=';', index=False)
+
+        return_df[type_] = df
 
     print('\n\n Download Complete! \n\n')
+    return return_df
