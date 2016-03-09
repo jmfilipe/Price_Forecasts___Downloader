@@ -9,7 +9,7 @@ setup(name='MIBEL_Downloader',
       license='MIT',
       packages=find_packages(),
       install_requires=[
-          'pandas >=0.16, <= 0.17',
+          'pandas >=0.16',
           'beautifulsoup4 >= 4.4.1, < 5.0',
           'html5lib'
       ],)

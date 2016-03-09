@@ -10,18 +10,21 @@ from pytz import timezone
 
 # todo dividir em funcoes, para nao ficar tudo no __init__
 # todo dar a opcao de retornar dataframe em vez de escrever num csv
-def download_range(download_type, start_date, end_date, timezone_, path=''):
 
-    def REE_download(day, forecast_to_export, timezone_):
+
+def REE_download(day, forecast_to_export, timezone_):
 
         url_options = {'wind_forecast': "preveol_DD",
                        'load_forecast': "demanda_aux"}
 
         url = "http://www.esios.ree.es/Solicitar/%s_%s.xml&en" % (url_options[forecast_to_export], day.strftime('%Y%m%d'))
 
-        file = urllib.request.urlopen(url)
-        data = file.read()
-        # todo verificar se o ficheiro esta vazio, em caso afirmativo tentar o download outra vez e depois registar o erro
+        try:
+            file = urllib.request.urlopen(url)
+            data = file.read()
+        except:
+            file = urllib.request.urlopen(url)
+            data = file.read()
 
         soup = BeautifulSoup(data, "html.parser")
 
@@ -69,7 +72,8 @@ def download_range(download_type, start_date, end_date, timezone_, path=''):
 
         return dfs
 
-    def REN_download(day, prices_to_export, timezone_):
+
+def REN_download(day, prices_to_export, timezone_):
 
         url_options = {'day_ahead_plus_intraday_price': "PrecoMerc",
                        'day_ahead_price': "PrecoMerc",
@@ -93,7 +97,6 @@ def download_range(download_type, start_date, end_date, timezone_, path=''):
             except:
                 continue
 
-        # todo implement with intraday, right does not work with lenghts
         if len(dfs) == 24:  # Regular Day
             dfs['HORA'] = [dfs['HORA'].iloc[i]-1 for i in range(0, len(dfs))]
             timestamp = [dfs['DATA'].iloc[i] + " " + str(dfs['HORA'].iloc[i]) + ":00:00" for i in range(0, len(dfs))]
@@ -128,6 +131,33 @@ def download_range(download_type, start_date, end_date, timezone_, path=''):
 
         return dfs
 
+
+def REN_generation(day, timezone_):
+
+    url = 'http://www.centrodeinformacao.ren.pt/userControls/GetExcel.aspx?T=CRG&P={0}&variation=PT' .format(day.strftime('%d-%m-%Y'))
+    dfs = pd.read_html(url, header=0, thousands=None, flavor='bs4')[0]
+    for col in dfs.columns[2:]:
+        try:
+            dfs[col] = dfs[col].str.replace(r",", ".").astype("float")
+            dfs[col] = dfs[col].str.replace(r".", "")
+        except:
+            continue
+    dfs.loc[:, 'timestamp'] = dfs['Data'] + ' ' + dfs['Hora']
+    dfs.drop(['Data', 'Hora'], 1, inplace=True)
+    dfs['timestamp'] = pd.to_datetime(dfs['timestamp'], format='%d-%m-%Y %H:%M')
+    dfs.set_index('timestamp', inplace=True)
+    # todo sum or mean
+    dfs.resample('1H', how='sum', inplace=True)
+    # dfs.resample('1H', how='mean', inplace=True)
+
+    print('')
+    """
+    http://www.centrodeinformacao.ren.pt/userControls/GetExcel.aspx?T=CRG&P=17-02-2014&variation=PT
+    """
+
+
+def download_range(download_type, start_date, end_date, timezone_, path=''):
+
     if isinstance(download_type, str):
         download_type = [download_type]
 
@@ -150,6 +180,9 @@ def download_range(download_type, start_date, end_date, timezone_, path=''):
                 print(day.strftime('%Y-%m-%d'))
                 dfs = REE_download(day, type_, timezone_)
                 df = pd.concat([df, dfs], ignore_index=True)
+        elif type_ == 'generation_PT':
+            for day in dates:
+                REN_generation(day, timezone_)
         else:
             sys.exit("""ERROR! Download Type: \'%s\' differs from expected values:
                     'day_ahead_price',
