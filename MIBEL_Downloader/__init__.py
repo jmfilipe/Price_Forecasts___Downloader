@@ -1,12 +1,12 @@
-
-from bs4 import BeautifulSoup
-import pandas as pd
-import numpy as np
 import urllib.request
 import sys
 from datetime import datetime, timedelta
 from pytz import timezone
+import time
 
+from bs4 import BeautifulSoup
+import pandas as pd
+import numpy as np
 
 # todo dividir em funcoes, para nao ficar tudo no __init__
 # todo dar a opcao de retornar dataframe em vez de escrever num csv
@@ -135,7 +135,19 @@ def REN_download(day, prices_to_export, timezone_):
 def REN_generation(day, timezone_):
 
     url = 'http://www.centrodeinformacao.ren.pt/userControls/GetExcel.aspx?T=CRG&P={0}&variation=PT' .format(day.strftime('%d-%m-%Y'))
-    dfs = pd.read_html(url, header=0, thousands=None, flavor='bs4')[0]
+    dfs = None
+    count = 1
+    while dfs is None:
+        try:
+            dfs = pd.read_html(url, header=0, thousands=None, flavor='bs4')[0]
+        except ValueError:
+            count += 1
+            print('Reconnecting... try number: {}'.format(count))
+            if count > 6:
+                time.sleep(30)
+            else:
+                time.sleep(5)
+
     for col in dfs.columns[2:]:
         try:
             dfs[col] = dfs[col].str.replace(r",", ".").astype("float")
@@ -145,15 +157,25 @@ def REN_generation(day, timezone_):
     dfs.loc[:, 'timestamp'] = dfs['Data'] + ' ' + dfs['Hora']
     dfs.drop(['Data', 'Hora'], 1, inplace=True)
     dfs['timestamp'] = pd.to_datetime(dfs['timestamp'], format='%d-%m-%Y %H:%M')
-    dfs.set_index('timestamp', inplace=True)
-    # todo sum or mean
-    dfs.resample('1H', how='sum', inplace=True)
-    # dfs.resample('1H', how='mean', inplace=True)
 
-    print('')
-    """
-    http://www.centrodeinformacao.ren.pt/userControls/GetExcel.aspx?T=CRG&P=17-02-2014&variation=PT
-    """
+    # dfs.to_csv('oi.csv', sep=';', index=False)
+    # dfs = pd.read_csv('oi.csv', sep=';', encoding="ISO-8859-1")
+    # dfs['timestamp'] = pd.to_datetime(dfs['timestamp'], format='%Y-%m-%d %H:%M:%S')
+
+    if len(dfs) == 25*4:  # Daylight Saving Time ended
+        dfs.loc[:7, 'timestamp'] = dfs.loc[:7, 'timestamp'] - pd.DateOffset(hours=1)
+        dfs.loc[:, 'timestamp'] = [timezone('UTC').localize(dfs.loc[i, 'timestamp']) for i in range(len(dfs))]
+    elif len(dfs) == 24*4:
+        dfs.loc[:, 'timestamp'] = [timezone('Europe/Lisbon').localize(dfs.loc[i, 'timestamp']) for i in len(dfs)]
+        dfs.loc[:, 'timestamp'] = [dfs.loc[i, 'timestamp'].astimezone(timezone('UTC')) for i in len(dfs)]
+    elif len(dfs) == 23*4:  # Daylight Saving Time started
+        dfs.loc[4:, 'timestamp'] = dfs.loc[4:, 'timestamp'] - pd.DateOffset(hours=1)
+        dfs.loc[:, 'timestamp'] = [timezone('UTC').localize(dfs.loc[i, 'timestamp']) for i in range(len(dfs))]
+
+    dfs.set_index('timestamp', inplace=True)
+    dfs = dfs.resample('1H', how='mean')
+
+    return dfs
 
 
 def download_range(download_type, start_date, end_date, timezone_, path=''):
@@ -182,6 +204,7 @@ def download_range(download_type, start_date, end_date, timezone_, path=''):
                 df = pd.concat([df, dfs], ignore_index=True)
         elif type_ == 'generation_PT':
             for day in dates:
+                print(day.strftime('%Y-%m-%d'))
                 REN_generation(day, timezone_)
         else:
             sys.exit("""ERROR! Download Type: \'%s\' differs from expected values:
