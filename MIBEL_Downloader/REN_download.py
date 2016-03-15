@@ -16,6 +16,10 @@ def REN_download(start, end, prices_to_export, timezone_):
         url = "http://www.mercado.ren.pt/UserPages/Dados_download.aspx?Dia1=%s&Dia2=%s&Nome=%s" % \
               (start.strftime('%Y-%m-%d'), end.strftime('%Y-%m-%d'), url_options[prices_to_export])
 
+        """
+        http://www.mercado.ren.pt/UserPages/Dados_download.aspx?Dia1=2015-12-31&Dia2=2015-12-31&Nome=OferSec&Ordem=P
+        """
+
         dfs = pd.read_html(url, header=0, thousands=None, flavor='bs4')
         dfs = dfs[0]
 
@@ -61,8 +65,7 @@ def REN_download(start, end, prices_to_export, timezone_):
 
         dfs['DATA'] = [timestamp[i].strftime('%Y-%m-%d %H:%M:%S') for i in range(0, len(dfs))]
         dfs.drop('HORA', 1, inplace=True)
-        dfs.set_index('DATA', inplace=True)
-        dfs.index.rename('timestamp', inplace=True)
+        dfs.rename(columns={'DATA': 'timestamp'}, inplace=True)
 
         return dfs
 
@@ -105,5 +108,6 @@ def REN_generation(day, timezone_):
 
     dfs.set_index('timestamp', inplace=True)
     dfs = dfs.resample('1H', how='mean')
+    dfs = dfs.reset_index()
 
     return dfs

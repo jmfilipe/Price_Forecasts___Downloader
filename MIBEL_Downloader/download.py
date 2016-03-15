@@ -46,7 +46,7 @@ def download_range(download_type, start_date, end_date, timezone_, path=''):
             for start, end in date_set:
                 print('Downloading from {} to {}'.format(start.strftime('%Y-%m-%d'), end.strftime('%Y-%m-%d')))
                 dfs = REN_download(start, end, type_, timezone_)
-                df = pd.concat([df, dfs], ignore_index=False)
+                df = pd.concat([df, dfs], ignore_index=True)
 
         else:
             for day in dates:
@@ -64,11 +64,11 @@ def download_range(download_type, start_date, end_date, timezone_, path=''):
                             'load_forecast',
                             'generation_PT'
                             """ % type_)
-                df = pd.concat([df, dfs], ignore_index=False)
+                df = pd.concat([df, dfs], ignore_index=True)
 
         if path is not False:
             filename = path + type_ + '.csv'
-            df.to_csv(filename, sep=';', index=True)
+            df.to_csv(filename, sep=';', index=False)
 
         return_df[type_] = df
 

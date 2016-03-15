@@ -66,6 +66,5 @@ def REE_download(day, forecast_to_export, timezone_):
         dfs.loc[:, 'Day'] = pd.to_datetime(dfs['Day'], format='%Y-%m-%d %H:%M:%S')
         dfs.columns = ['timestamp', forecast_to_export]
         dfs.loc[:, 'launch_time'] = dfs.loc[0, 'timestamp'] - pd.DateOffset(days=1)
-        dfs.set_index(['launch_time', 'timestamp'], inplace=True)
 
         return dfs
