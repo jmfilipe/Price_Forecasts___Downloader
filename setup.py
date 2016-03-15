@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='MIBEL_Downloader',
-      version='0.3',
+      version='0.4',
       description='Downloader for MIBEL Market Prices and Load/Wind Forecasts',
       url='http://github.com/jmfilipe/Price_Forecasts___Downloader',
       author='Jorge Filipe',
