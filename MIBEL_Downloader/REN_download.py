@@ -6,7 +6,7 @@ import time
 import pandas as pd
 
 
-def REN_download(day, prices_to_export, timezone_):
+def REN_download(start, end, prices_to_export, timezone_):
 
         url_options = {'day_ahead_plus_intraday_price': "PrecoMerc",
                        'day_ahead_price': "PrecoMerc",
@@ -14,7 +14,7 @@ def REN_download(day, prices_to_export, timezone_):
                        'tertiary_reserve': "Reserva"}
 
         url = "http://www.mercado.ren.pt/UserPages/Dados_download.aspx?Dia1=%s&Dia2=%s&Nome=%s" % \
-              (day.strftime('%Y-%m-%d'), day.strftime('%Y-%m-%d'), url_options[prices_to_export])
+              (start.strftime('%Y-%m-%d'), end.strftime('%Y-%m-%d'), url_options[prices_to_export])
 
         dfs = pd.read_html(url, header=0, thousands=None, flavor='bs4')
         dfs = dfs[0]
@@ -30,7 +30,7 @@ def REN_download(day, prices_to_export, timezone_):
             except:
                 continue
 
-        if len(dfs) == 24:  # Regular Day
+        if len(dfs) % 24 == 0:  # Regular Day
             dfs['HORA'] = [dfs['HORA'].iloc[i]-1 for i in range(0, len(dfs))]
             timestamp = [dfs['DATA'].iloc[i] + " " + str(dfs['HORA'].iloc[i]) + ":00:00" for i in range(0, len(dfs))]
             timestamp = [datetime.strptime(timestamp[i], "%d-%m-%Y %H:%M:%S") for i in range(0, len(dfs))]
@@ -60,7 +60,9 @@ def REN_download(day, prices_to_export, timezone_):
         timestamp = [timestamp_utc[i].astimezone(timezone(timezone_)) for i in range(0, len(dfs))]
 
         dfs['DATA'] = [timestamp[i].strftime('%Y-%m-%d %H:%M:%S') for i in range(0, len(dfs))]
-        dfs = dfs.drop('HORA', 1)
+        dfs.drop('HORA', 1, inplace=True)
+        dfs.set_index('DATA', inplace=True)
+        dfs.index.rename('timestamp', inplace=True)
 
         return dfs
 
@@ -90,10 +92,6 @@ def REN_generation(day, timezone_):
     dfs.loc[:, 'timestamp'] = dfs['Data'] + ' ' + dfs['Hora']
     dfs.drop(['Data', 'Hora'], 1, inplace=True)
     dfs['timestamp'] = pd.to_datetime(dfs['timestamp'], format='%d-%m-%Y %H:%M')
-
-    # dfs.to_csv('oi.csv', sep=';', index=False)
-    # dfs = pd.read_csv('oi.csv', sep=';', encoding="ISO-8859-1")
-    # dfs['timestamp'] = pd.to_datetime(dfs['timestamp'], format='%Y-%m-%d %H:%M:%S')
 
     if len(dfs) == 25*4:  # Daylight Saving Time ended
         dfs.loc[:7, 'timestamp'] = dfs.loc[:7, 'timestamp'] - pd.DateOffset(hours=1)
