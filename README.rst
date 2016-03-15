@@ -11,6 +11,7 @@ This downloader supports:
 * MIBEL Terciary Reserve Prices [REN.pt]
 * Iberian Load Forecasts - 7 days ahead [REE.es]
 * Iberian Wind Power Forecasts - 24 hours ahead [REE.es]
+* Portuguese Generation - hydro, solar, etc... [REN.pt]
 
 Installation
 ------------
@@ -32,7 +33,7 @@ Documentation
 
     download_range(download_type, start_date, end_date, timezone_, path)
 
-* **download_type**:   'day_ahead_price', 'secondary_reserve', 'tertiary_reserve', 'wind_forecast', 'load_forecast'
+* **download_type**:   'day_ahead_price', 'secondary_reserve', 'tertiary_reserve', 'wind_forecast', 'load_forecast', 'generation_PT'
 * **start_date**: format Y-m-d
 * **end_date**: format Y-m-d
 * **timezone\_**: complete list of timezones at: http://stackoverflow.com/questions/13866926/python-pytz-list-of-timezones
@@ -50,6 +51,7 @@ Example
     # 'tertiary_reserve'
     # 'wind_forecast'
     # 'load_forecast'
+    # 'generation_PT'
 
     # single download type
     df = mibel.download_range(download_type='day_ahead_price',
