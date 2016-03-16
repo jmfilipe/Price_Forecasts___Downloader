@@ -10,7 +10,8 @@ from .REN_download import REN_download, REN_generation
 
 def daylight_changes(dates, timezone_):
     tz = timezone(timezone_)
-    tz_changes = tz._utc_transition_times
+    tz_changes = [pd.to_datetime(i, format='%Y-%m-%d').date() for i in tz._utc_transition_times[1:]]
+    dates = [pd.to_datetime(i, format='%Y-%m-%d').date() for i in dates]
     chngs = [i for i in tz_changes if dates[0] <= i <= dates[-1]]
     date_set = []
     if not chngs:
@@ -18,11 +19,17 @@ def daylight_changes(dates, timezone_):
     else:
         start = dates[0]
         end = dates[-1]
+        if start == end:
+            return [start, end]
         for i in range(len(chngs)):
-            date_set.append([start, chngs[i]-pd.DateOffset(days=1)])
-            date_set.append([chngs[i], chngs[i]])
-            start = chngs[i]+pd.DateOffset(days=1)
-        date_set.append([start, end])
+            if start == chngs[i]:
+                date_set.append([start, start])
+            else:
+                date_set.append([start, chngs[i]-pd.DateOffset(days=1)])
+                date_set.append([chngs[i], chngs[i]])
+            start = chngs[i]+pd.DateOffset(days=1) if chngs[i] != end else chngs[i]
+        if start != end:
+            date_set.append([start, end])
 
     return date_set
 
@@ -41,7 +48,7 @@ def download_range(download_type, start_date, end_date, timezone_, path=''):
         dates = pd.bdate_range(start_date, end_date, freq='D')
         df = pd.DataFrame()
 
-        if type_ in ['day_ahead_price', 'secondary_reserve', 'tertiary_reserve']:
+        if type_ in ['day_ahead_price', 'secondary_reserve', 'tertiary_reserve', 'secondary_offers', 'tertiary_offers']:
             date_set = daylight_changes(dates, 'Europe/Madrid')
             for start, end in date_set:
                 print('Downloading from {} to {}'.format(start.strftime('%Y-%m-%d'), end.strftime('%Y-%m-%d')))

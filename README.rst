@@ -7,8 +7,8 @@ Exports information as a csv file and/or as a pandas DataFrame. Takes into accou
 This downloader supports:
 
 * MIBEL Day-ahead Energy Market Prices [REN.pt]
-* MIBEL Secundary Reserve Prices [REN.pt]
-* MIBEL Terciary Reserve Prices [REN.pt]
+* Portuguese Secundary Reserve Prices and Offers [REN.pt]
+* Portuguese Terciary Reserve Prices and Offers [REN.pt]
 * Iberian Load Forecasts - 7 days ahead [REE.es]
 * Iberian Wind Power Forecasts - 24 hours ahead [REE.es]
 * Portuguese Generation - hydro, solar, etc... [REN.pt]
@@ -33,7 +33,7 @@ Documentation
 
     download_range(download_type, start_date, end_date, timezone_, path)
 
-* **download_type**:   'day_ahead_price', 'secondary_reserve', 'tertiary_reserve', 'wind_forecast', 'load_forecast', 'generation_PT'
+* **download_type**:   'day_ahead_price', 'secondary_reserve', 'tertiary_reserve', 'wind_forecast', 'load_forecast', 'generation_PT', 'secondary_offers','tertiary_offers'
 * **start_date**: format Y-m-d
 * **end_date**: format Y-m-d
 * **timezone\_**: complete list of timezones at: http://stackoverflow.com/questions/13866926/python-pytz-list-of-timezones
@@ -52,6 +52,8 @@ Example
     # 'wind_forecast'
     # 'load_forecast'
     # 'generation_PT'
+    # 'secondary_offers'
+    # 'tertiary_offers'
 
     # single download type
     df = mibel.download_range(download_type='day_ahead_price',
