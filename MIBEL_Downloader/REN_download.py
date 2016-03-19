@@ -30,8 +30,8 @@ def REN_download(start, end, prices_to_export, timezone_):
             except ValueError:
                 count += 1
                 print('Reconnecting... try number: {}'.format(count))
-                time.sleep(5)
-                if count > 5:
+                time.sleep(2)
+                if count > 3:
                     print("Downloading day by day, it may take awhile")
                     missing_days = []
                     if prices_to_export == 'tertiary_offers':
@@ -45,13 +45,20 @@ def REN_download(start, end, prices_to_export, timezone_):
                                 (day.strftime('%Y-%m-%d'), day.strftime('%Y-%m-%d'), url_options[prices_to_export])
                             aux = pd.read_html(url, header=0, thousands=None, flavor='bs4')
                             if len(aux) == 1:
-                                dfss = pd.concat([dfss, aux], axis=0)
+                                dfss = pd.concat([dfss, aux[0]], axis=0)
                             else:
                                 dfss[0] = pd.concat([dfss[0], aux[0]], axis=0)
                                 dfss[1] = pd.concat([dfss[1], aux[1]], axis=0)
                         except ValueError:
                             missing_days.append(day)
                             continue
+
+                    if prices_to_export is not 'tertiary_offers':
+                        dfss = [dfss]
+
+                    for df in dfss:
+                        df.reset_index(drop=True, inplace=True)
+
                     if missing_days:
                         print("""
                         It was not able to obtain {} information for the following days: {}
@@ -88,19 +95,20 @@ def REN_download(start, end, prices_to_export, timezone_):
 
         date_hour_pair = dfs.groupby(['DATA', 'HORA']).count()  # counts the unique pairs of date and hour, useful to find daylights saving periods
         if len(date_hour_pair) % 24 == 0:  # Regular Day
-            dfs['HORA'] = [dfs['HORA'].iloc[i]-1 for i in range(0, len(dfs))]
-            dfs.loc[:, 'DATA'] = [pd.to_datetime(dfs.loc[i, 'DATA'], format="%d-%m-%Y") + pd.DateOffset(hours=int(dfs.loc[i, 'HORA'])) for i in dfs.index]
+            dfs.loc[:, 'HORA'] = dfs['HORA'].astype(int)-1
+            dfs.loc[:, 'DATA'] = pd.to_datetime(dfs.loc[:, 'DATA'], format="%d-%m-%Y")
+            dfs.loc[:, 'DATA'] = [dfs.loc[i, 'DATA'] + pd.DateOffset(hours=int(dfs.loc[i, 'HORA'])) for i in dfs.index]
             dfs.loc[:, 'DATA'] = [timezone('Europe/Madrid').localize(dfs.loc[i, 'DATA']) for i in dfs.index]
             dfs.loc[:, 'DATA'] = [(dfs.loc[i, 'DATA']).astimezone(timezone('UTC')) for i in dfs.index]
 
         elif len(date_hour_pair) == 23:  # Daylight Saving Time started
-            dfs['HORA'] = [dfs['HORA'].iloc[i]-1 for i in range(0, len(dfs))]
+            dfs.loc[:, 'HORA'] = dfs['HORA'].astype(int)-1
             dfs.loc[:, 'DATA'] = [pd.to_datetime(dfs.loc[i, 'DATA'], format="%d-%m-%Y") + pd.DateOffset(hours=int(dfs.loc[i, 'HORA'])) for i in dfs.index]
             dfs.loc[:, 'DATA'] = dfs.loc[:, 'DATA'] - pd.DateOffset(hours=1)
             dfs.loc[:, 'DATA'] = [timezone('UTC').localize(dfs.loc[i, 'DATA']) for i in dfs.index]
 
         elif len(date_hour_pair) == 25:  # Daylight Saving Time ended
-            dfs['HORA'] = [dfs['HORA'].iloc[i]-1 for i in range(0, len(dfs))]
+            dfs.loc[:, 'HORA'] = dfs['HORA'].astype(int)-1
             dfs.loc[:, 'DATA'] = [pd.to_datetime(dfs.loc[i, 'DATA'], format="%d-%m-%Y") + pd.DateOffset(hours=int(dfs.loc[i, 'HORA'])) for i in dfs.index]
             dfs.loc[:, 'DATA'] = dfs.loc[:, 'DATA'] - pd.DateOffset(hours=2)
             dfs.loc[:, 'DATA'] = [timezone('UTC').localize(dfs.loc[i, 'DATA']) for i in dfs.index]
