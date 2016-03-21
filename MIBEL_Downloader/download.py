@@ -46,14 +46,21 @@ def download_range(download_type, start_date, end_date, timezone_, path=''):
         print("\n   .:: Downloading %s ::.\n" % type_)
 
         dates = pd.bdate_range(start_date, end_date, freq='D')
-        df = pd.DataFrame()
+        if type_ is 'tertiary_offers':
+            df = [pd.DataFrame()] * 2
+        else:
+            df = pd.DataFrame()
 
         if type_ in ['day_ahead_price', 'secondary_reserve', 'tertiary_reserve', 'secondary_offers', 'tertiary_offers']:
             date_set = daylight_changes(dates, 'Europe/Madrid')
             for start, end in date_set:
                 print('Downloading from {} to {}'.format(start.strftime('%Y-%m-%d'), end.strftime('%Y-%m-%d')))
                 dfs = REN_download(start, end, type_, timezone_)
-                df = pd.concat([df, dfs], ignore_index=True)
+                if type_ is 'tertiary_offers':
+                    df[0] = pd.concat([df[0], dfs[0]], ignore_index=True)
+                    df[1] = pd.concat([df[1], dfs[1]], ignore_index=True)
+                else:
+                    df = pd.concat([df, dfs[0]], ignore_index=True)
 
         else:
             for day in dates:
@@ -74,8 +81,12 @@ def download_range(download_type, start_date, end_date, timezone_, path=''):
                 df = pd.concat([df, dfs], ignore_index=True)
 
         if path is not False:
-            filename = path + type_ + '.csv'
-            df.to_csv(filename, sep=';', index=False)
+            filename = path + type_
+            if type_ is 'tertiary_offers':
+                df[0].to_csv(filename+'_up.csv', sep=';', index=False)
+                df[1].to_csv(filename+'_down.csv', sep=';', index=False)
+            else:
+                df.to_csv(filename+'.csv', sep=';', index=False)
 
         return_df[type_] = df
 
