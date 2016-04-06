@@ -20,7 +20,7 @@ def daylight_changes(dates, timezone_):
         start = dates[0]
         end = dates[-1]
         if start == end:
-            return [start, end]
+            return [[start, end]]
         for i in range(len(chngs)):
             if start == chngs[i]:
                 date_set.append([start, start])
@@ -38,6 +38,9 @@ def download_range(download_type, start_date, end_date, timezone_, path=''):
 
     if isinstance(download_type, str):
         download_type = [download_type]
+
+    if 'wind_forecast' or 'load_forecast' in download_type:
+        sys.exit("\nERROR! \n Wind and Load forecasts download not working since recently REE changed their webservice layout. ")
 
     return_df = {}
 
